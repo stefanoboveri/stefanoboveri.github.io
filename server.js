@@ -5,11 +5,11 @@ const app = express();
 const PORT = 3000;
 
 // Replace with your Genesys Cloud region
-const GENESYS_API_BASE = 'https://api.mypurecloud.com/api/v2'; 
+const GENESYS_API_BASE = 'https://api.mypurecloud.de/api/v2'; 
 
 // Replace with your OAuth token retrieval logic
 const getAuthHeader = () => ({
-  Authorization: `Bearer YOUR_GENESYS_CLOUD_ACCESS_TOKEN`
+  Authorization: Bl3Hkrec6r_QAGXtVFrXiKsxnFIS9P6K6ppKvgne-5FMZ2X3OTpQ1sCcNZprG0omWOzZkXLQs0f-PoaiaVe_XA
 });
 
 app.use(bodyParser.json());
@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.get('/api/worktypes', async (req, res) => {
   try {
     const resp = await axios.get(
-      `${GENESYS_API_BASE}/workforce/worktypes`, 
+      `${GENESYS_API_BASE}/taskmanagement/worktypes/query`, 
       { headers: getAuthHeader() }
     );
     res.json(resp.data.entities);
@@ -44,7 +44,7 @@ app.get('/api/worktypes/:id/schema', async (req, res) => {
 app.post('/api/workitems', async (req, res) => {
   try {
     const resp = await axios.post(
-      `${GENESYS_API_BASE}/workforce/workitems`,
+      `${GENESYS_API_BASE}/taskmanagement/workitems`,
       req.body,
       { headers: getAuthHeader() }
     );
