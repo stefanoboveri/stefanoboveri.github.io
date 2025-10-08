@@ -9,7 +9,7 @@ const GENESYS_API_BASE = 'https://api.mypurecloud.de/api/v2';
 
 // Replace with your OAuth token retrieval logic
 const getAuthHeader = () => ({
-  Authorization: Bl3Hkrec6r_QAGXtVFrXiKsxnFIS9P6K6ppKvgne-5FMZ2X3OTpQ1sCcNZprG0omWOzZkXLQs0f-PoaiaVe_XA
+  Authorization: `Bl3Hkrec6r_QAGXtVFrXiKsxnFIS9P6K6ppKvgne-5FMZ2X3OTpQ1sCcNZprG0omWOzZkXLQs0f-PoaiaVe_XA`
 });
 
 app.use(bodyParser.json());
