@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Agent Monitoring</title>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/fontawesome.min.css">
+    <link rel="stylesheet" href="css/solid.min.css">
+
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="https://sdk-cdn.mypurecloud.com/javascript/226.0.0/purecloud-platform-client-v2.min.js"></script>
+    <script src="https://sdk-cdn.mypurecloud.com/client-apps/2.3.0/purecloud-client-app-sdk-70ec0c8b.min.js"></script>
+
+    <style>
+        body {
+            margin-left: 11px;
+        }
+
+
+        section.interactions .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+        }
+
+        section.interactions .headertext {
+            display: flex;
+        }
+
+        section.interactions .headertext h2 {
+            margin: 10px;
+        }
+
+        section.interactions h2 {
+            font-size: 24px;
+        }
+
+        button.conference-button {
+            align-self: center;
+            margin-left: 12px;
+        }
+
+
+        .reloading {
+            margin: 10px;
+            text-align: center;
+            width: 100%;
+        }
+
+        section.stuff .headertext {
+            display: flex;
+        }
+
+        section.stuff .headertext h2 {
+            margin: 10px;
+        }
+
+        section.stuff h2 {
+            font-size: 24px;
+        }
+
+        button.toolbarbutton {
+            align-self: center;
+            margin-left: 12px;
+        }
+
+        .reloading {
+            margin: 10px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .buttons {
+            font-size: 24px;
+        }
+
+        table.interactions tr td.media-type {
+            padding-left: 15px;
+            color: #337ab7;
+            display: table-cell;
+        }
+
+        table.interactions tr td.media-type.text-only {
+            padding-left: 0;
+            color: inherit;
+        }
+
+
+        table.interactions tbody tr {
+            font-size: 12px;
+        }
+
+        #log,
+        #monitoreduser {
+            margin-top: 10px;
+        }
+
+        a.conversationlinks, i#opensettings {
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(204, 44, 44, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(204, 44, 44, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(204, 44, 44, 0);
+            }
+        }
+
+        .tester-note {
+            font-size: .75em;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <noscript>
+        For full functionality of this site it is necessary to enable JavaScript. Here are the <a
+            href="http://www.enable-javascript.com/" target="_blank">instructions how to enable JavaScript in your web
+            browser</a>.
+    </noscript>
+
+    <h1 class="sr-only">Test UIs for Interaction SDK</h1>
+
+    <section class="authenticating hidden">
+        Authenticating to Genesys Cloud <span class="fas fa-spinner fa-spin"></span>
+    </section>
+    <section class="failure">
+
+    </section>
+
+
+    <section class="stuff hidden">
+        <div class="header">
+            <div class="headertext">
+                <h2>Agent Monitoring</h2>
+
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="usersearchbox" class="row mb-3">
+                <div class="col">
+                    <input id="usersearch" type="text" placeholder="Search for users..." class="form-control"
+                        aria-label="Search for users" autocomplete="on" />
+                    <div class="dropdown-menu">
+
+                    </div>
+                </div>
+                <div class="col-1" style="padding-left:5px">
+                    <span style="font-size: 16px;color: Dodgerblue;padding-top: 5px;padding-right: 0px;display: block;">
+                    <i class="fa-solid fa-gear fa-lg" id="opensettings" data-bs-toggle="modal" data-bs-target="#settings"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div id="monitoreduser">
+                <div class="row mb-3">
+                    <div class="col-7">
+                        <input type="text" class="form-control" disabled="disabled" id="monitoredUserName" />
+                    </div>
+                    <div class="col-5">
+                        <button type="button" class="monitor btn btn-primary" aria-label="monitor" id="monitor"
+                            disabled="disabled">Start Monitoring</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="log">
+            <table class="interactions table table-striped" id="interactions">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">conversationId</th>
+                        <th scope="col">connected</th>
+                        <th scope="col">monitoring</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </section>
+
+    <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="settingsLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <input type="checkbox" id="alerUser" name="alerUser" value="true" />
+                    <label for="alerUser">Alert agent when monitoring</label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ok</button>
+                </div>
+    </div>
+
+    <script>
+        $(document).ready(() => {
+            let platformClient = window.require('platformClient');
+
+
+            /*
+            * The Client Apps SDK can interpolate the current PC Environment into your app's URL
+            * EX: https://mypurecloud.github.io/client-app-sdk/directoryNavigationDemo.html?pcEnvironment={{pcEnvironment}}
+            *
+            * Reading the PC Environment from the query string or state param returned from OAuth2 response
+            */
+            let pcEnvironment = getEmbeddingPCEnv();
+
+            if (!pcEnvironment) {
+                setErrorState('Missing pcEnvironment param in the query string');
+                return;
+            }
+
+            let client = platformClient.ApiClient.instance;
+            let clientApp = null;
+            try {
+                clientApp = new window.purecloud.apps.ClientApp({
+                    pcEnvironment: pcEnvironment
+                });
+            } catch (e) {
+                setErrorState(pcEnvironment + ': Unknown/Unsupported Genesys Cloud Embed Context');
+                return;
+            }
+
+
+
+            // Authenticate with Genesys Cloud
+            $('.authenticating').show();
+
+            let authenticated = false;
+            let userDataAcquired = false;
+            let canViewInteraction = false;
+            let userid = "";
+
+            authenticate(client, pcEnvironment)
+                .then(() => {
+                    authenticated = true;
+                    return new platformClient.UsersApi().getUsersMe({ 'expand': ['authorization'] })
+                })
+                .then(profileData => {
+                    userDataAcquired = true;
+
+                    userid = profileData.id;
+
+                    // Check if the current user will be able to view interaction details
+                    let permissions = profileData.authorization.permissions;
+                    if (checkPermission(permissions, 'analytics:conversationDetail:view') &&
+                        checkPermission(permissions, 'analytics:conversationAggregate:view')) {
+                        canViewInteraction = true;
+                    }
+
+                    let Stuff = document.querySelector('section.stuff');
+
+                    let notificationsApi = new platformClient.NotificationsApi();
+
+                    var channelId = null;
+                    var websocketUri = "";
+                    var socket = null;
+                    var monitoredConversationId = null;
+
+                    $('.authenticating').hide();
+
+                    async function StartMonitor(userId) {
+                        let analyticsApi = new platformClient.AnalyticsApi();
+                        let data = await analyticsApi.getAnalyticsAgentStatus(userId);
+                        if (data.sessionCount > 0) {
+                            let connectedConversation = data.sessions.find(session => session.segmentType === 'interact' && session.conversationId);
+                            if (connectedConversation) {
+                                console.log("Currently connected conversation:", connectedConversation.conversationId);
+                                let conversationsApi = new platformClient.ConversationsApi();
+                                let connectedConversationData = await conversationsApi.getConversationsCall(connectedConversation.conversationId);
+                                if (connectedConversationData) {
+                                    let conversationId = connectedConversationData.id;
+                                    let agentParticipant = connectedConversationData.participants.find(participant => participant.purpose === 'agent' && participant.state == 'connected' && participant.user.id == userId);
+                                    let customerParticipant = connectedConversationData.participants.find(participant => participant.purpose === 'customer' && participant.state == 'connected');
+                                    if (agentParticipant && customerParticipant) {
+                                        monitoredConversationId = conversationId;
+                                        console.log("Starting monitor for conversation: " + conversationId);
+                                        $("#row_" + conversationId).remove();
+                                        $("#interactions").append("<tr id=\"row_" + conversationId + "\"><td><a class=\"conversationlinks\" id=\"conversation_" + conversationId + "\" href=\"#\">" + conversationId + "</a></td><td id=\"state_" + conversationId + "\" class=\"states\">" + "<span class=\"fas fa-check\" style=\"color: green;\"></span>" + "</td><td id=\"monitored_" + conversationId + "\" class=\"monitors\">" + "&nbsp;" + "</td></tr>");
+                                        MonitorConversation(conversationId, agentParticipant.id).then(() => {
+                                            MessageUser(userId, "Conversation " + conversationId + " is being monitored.");
+                                            console.log("Monitoring started for conversation: " + conversationId);
+                                        }).catch((err) => {
+                                            console.log("There was a failure calling postConversationsCallParticipantMonitor");
+                                            console.error(err);
+                                        });
+                                    }
+
+                                } else {
+                                    console.log("No connected conversation data found for this conversation.");
+                                }
+                            } else {
+                                console.log("No currently connected conversations for this user.");
+                            }
+                        } else {
+                            console.log("No currently connected conversations for this user.");
+                        }
+
+                        if (!websocketUri || !socket || !channelId) {
+                            console.log("Creating new WebSocket connection");
+                            let channelData = await notificationsApi.postNotificationsChannels();
+                            channelId = channelData.id;
+                            websocketUri = channelData.connectUri;
+                            socket = new WebSocket(websocketUri);
+                        }
+
+
+                        socket.onmessage = function (event) {
+                            //console.log(event.data);
+                            eventData = JSON.parse(event.data);
+                            if (eventData.topicName != 'v2.users.' + userId + '.conversations') {
+                                return;
+                            }
+
+                            let conversationId = eventData.eventBody.id;
+                            let agentParticipant = eventData.eventBody.participants.find(participant => participant.purpose === 'agent' && participant.calls[0].state == 'connected' && participant.userId == userId);
+                            let customerParticipant = eventData.eventBody.participants.find(participant => participant.purpose === 'customer' && participant.calls[0].state == 'connected');
+                            if (!agentParticipant || !customerParticipant) {
+                                console.log("No agent or customer participant found in conversation");
+                                $("#state_" + conversationId).html("<span class=\"fas fa-times\" style=\"color: red;\"></span>");
+                                $("#monitored_" + conversationId).html("<span class=\"fas fa-times\" style=\"color: red;\"></span>");
+                                return;
+                            }
+                            if (monitoredConversationId && monitoredConversationId === conversationId) {
+                                console.log("Ignoring message for conversation already being monitored");
+                                return;
+                            }
+                            monitoredConversationId = conversationId;
+                            console.log("Starting monitor for conversation: " + conversationId);
+                            $("#row_" + conversationId).remove();
+                            $("#interactions").append("<tr id=\"row_" + conversationId + "\"><td><a class=\"conversationlinks\" id=\"conversation_" + conversationId + "\" href=\"#\">" + conversationId + "</a></td><td id=\"state_" + conversationId + "\" class=\"states\">" + "<span class=\"fas fa-check\" style=\"color: green;\"></span>" + "</td><td id=\"monitored_" + conversationId + "\" class=\"monitors\">" + "&nbsp;" + "</td></tr>");
+                            MonitorConversation(conversationId, agentParticipant.id).then(() => {
+                                MessageUser(userId, "Conversation " + conversationId + " is being monitored.");
+                                console.log("Monitoring started for conversation: " + conversationId);
+                            }).catch((err) => {
+                                console.log("There was a failure calling postConversationsCallParticipantMonitor");
+                                console.error(err);
+                            });
+
+                        };
+                        socket.onopen = function () {
+                            console.log("🚀 Connected to WebSocket!");
+                        };
+                        socket.onclose = function () {
+                            console.log("Connection closed");
+                        };
+
+                        let topic = [{ id: `v2.users.${userId}.conversations` }];
+
+                        await notificationsApi.postNotificationsChannelSubscriptions(channelId, topic)
+                            .then(response => {
+                                console.log('Subscribed to notifications:', response);
+                                monitoringStarted = true;
+                                $('#monitor').removeClass('btn-primary').addClass('btn-danger').text('Stop Monitoring');
+                                MessageUser(userId, "**Monitoring started**");
+                            })
+                            .catch(error => {
+                                console.error('Error subscribing to notifications:', error);
+                            });
+
+                    }
+
+                    async function MonitorConversation(conversationId, agentParticipantId) {
+
+                        let conversationApi = new platformClient.ConversationsApi();
+                        conversationApi.postConversationsCallParticipantMonitor(conversationId, agentParticipantId)
+                            .then(() => {
+                                console.log("postConversationsCallParticipantMonitor returned successfully.");
+                                $("#monitored_" + conversationId).html("<span class=\"fas fa-check\" style=\"color: green;\"></span>");
+                            })
+                            .catch((err) => {
+                                console.log("There was a failure calling postConversationsCallParticipantMonitor");
+                                console.error(err);
+                            });
+                    }
+
+                    async function MessageUser(userId, message) {
+                        let alerUser = $('#alerUser').is(':checked');
+                        if (!alerUser) {
+                            return;
+                        }
+                        let chatApi = new platformClient.ChatApi();
+                        let body = { "message": message };
+                        return chatApi.postChatsUserMessages(userId, body);
+                    }
+
+                    async function StopMonitor(userId) {
+                        if (socket) {
+                            socket.close();
+                            socket = null;
+                        }
+                        if (channelId) {
+                            await notificationsApi.deleteNotificationsChannelSubscriptions(channelId)
+                                .then(() => {
+                                    $('#monitor').removeClass('btn-danger').addClass('btn-primary').text('Start Monitoring');
+                                    $('.states').empty();
+                                    $('.monitors').empty();
+                                    console.log("Unsubscribed from notifications");
+                                    MessageUser(userId, "**Monitoring stopped**")
+                                    monitoringStarted = false;
+                                })
+                                .catch((err) => {
+                                    console.error("Error unsubscribing from notifications:", err);
+                                });
+                        }
+                        if (monitoredConversationId) {
+                            let conversationsApi = new platformClient.ConversationsApi();
+                            let monitoredConversationData = await conversationsApi.getConversationsCall(monitoredConversationId);
+                            if (monitoredConversationData) {
+                                let supervisorParticipant = monitoredConversationData.participants.find(participant => participant.purpose === 'user' && participant.state == 'connected' && participant.mediaRoles[0] == 'monitor');
+                                if (supervisorParticipant) {
+                                    await conversationsApi.patchConversationsCallParticipant(monitoredConversationId, supervisorParticipant.id, {
+                                        "state": "DISCONNECTED"
+                                    })
+                                        .then(() => {
+                                            console.log("Stopped monitoring conversation: " + monitoredConversationId);
+                                            $("#monitored_" + monitoredConversationId).empty();
+                                            monitoredConversationId = null;
+
+                                        })
+                                        .catch((err) => {
+                                            console.error("Error disconnecting supervisor participant:", err);
+                                        });
+                                }
+                            }
+                        }
+
+                    }
+
+                    $('button.monitor').on('click', function () {
+                        let userId = $(this).data('user-id');
+                        if (userId) {
+                            if (monitoringStarted) {
+                                // Stop monitoring
+                                console.log("Stopping monitoring for user: " + userId);
+                                StopMonitor(userId);
+                                return;
+                            } else {
+                                console.log("Starting monitoring for user: " + userId);
+                                StartMonitor(userId);
+                            }
+
+                        } else {
+                            console.error("User ID not found for monitor button");
+                        }
+                    });
+
+                    var previousTimestamp = 0;
+
+                    $('#usersearch').on('input', async function (event) {
+                        if (event.keyCode === 13) {
+                            event.preventDefault();
+                        }
+                        let searchTerm = $(this).val().toLowerCase();
+                        if (searchTerm.length > 2) {
+                            var diff = Date.now() - previousTimestamp;
+                            if (diff < 2000) {
+                                return;
+                            }
+                            previousTimestamp = Date.now();
+                            let usersApi = new platformClient.UsersApi();
+                            let body = `{"query":[{"value":"${searchTerm}","fields":["name","username"],"type":"CONTAINS"}],"sortOrder":"ASC","sortBy":"name","pageSize":10}`;
+
+                            usersApi.postUsersSearch(body)
+                                .then(data => {
+                                    if (data.total > 0) {
+                                        $('.dropdown-menu').empty();
+                                        data.results.forEach(user => {
+                                            if (user.id !== userid) {
+                                                $('.dropdown-menu').append(`<a class="dropdown-item" href="#" data-user-id="${user.id}" data-user-name="${user.name}">${user.name}</a>`);
+                                                $('.dropdown-menu a.dropdown-item').off('click').on('click', function (e) {
+                                                    e.preventDefault();
+                                                    const userId = $(this).data('user-id');
+                                                    const userName = $(this).data('user-name');
+                                                    $('#monitoredUserName').val(userName);
+                                                    $('button.monitor').data('user-id', userId).removeAttr('disabled');
+                                                    $('#usersearch').val('');
+                                                    $('.dropdown-menu').hide();
+                                                });
+
+                                            }
+                                        });
+                                        $('.dropdown-menu').show();
+                                    } else {
+                                        $('.dropdown-menu').hide();
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Error fetching users:', err);
+                                });
+                        } else {
+                            $('.dropdown-menu').hide();
+                        }
+                    });
+
+                    $('#interactions').on('click', 'a.conversationlinks', function (e) {
+                        e.preventDefault();
+                        let conversationId = $(this).attr('id').replace('conversation_', '');
+                        if (canViewInteraction) {
+                            clientApp.conversations.showInteractionDetails(conversationId);
+                        } else {
+                            alert("You do not have permission to view interaction details.");
+                        }
+                    });
+
+                    var monitoringStarted = false;
+
+                    $('.stuff').show();
+
+                })
+                .catch(function (err) {
+                    $('.authenticating').hide();
+
+                    if (!authenticated) {
+                        setErrorState('Failed to Authenticate with Genesys Cloud - ' + err.message);
+                    } else if (!userDataAcquired) {
+                        setErrorState('Failed to locate user in Genesys Cloud');
+                    }
+                });
+
+
+
+
+
+            function extractParams(paramStr) {
+                let result = {};
+
+                if (paramStr) {
+                    let params = paramStr.split('&');
+                    params.forEach(function (currParam) {
+                        if (currParam) {
+                            let paramTokens = currParam.split('=');
+                            let paramName = paramTokens[0];
+                            let paramValue = paramTokens[1];
+                            if (paramName) {
+                                paramName = decodeURIComponent(paramName);
+                                paramValue = paramValue ? decodeURIComponent(paramValue) : null;
+
+                                if (!result.hasOwnProperty(paramName)) {
+                                    result[paramName] = paramValue;
+                                } else if (Array.isArray(result[paramName])) {
+                                    result[paramName].push(paramValue);
+                                } else {
+                                    result[paramName] = [result[paramName], paramValue];
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return result;
+            }
+
+            /**
+             * Determine the embedding Genesys Cloud environment seeded on the query string or
+             * being returned through the OAuth2 Implicit grant state hash param.
+             *
+             * @returns A string indicating the embedding PC env (e.g. mypurecloud.com, mypurecloud.jp); otherwise, null.
+             */
+            function getEmbeddingPCEnv() {
+                let result = null;
+
+                if (window.location.hash && window.location.hash.indexOf('access_token') >= 0) {
+                    let oauthParams = extractParams(window.location.hash.substring(1));
+                    if (oauthParams && oauthParams.access_token && oauthParams.state) {
+                        // OAuth2 spec dictates this encoding
+                        // See: https://tools.ietf.org/html/rfc6749#appendix-B
+                        let stateSearch = unescape(oauthParams.state);
+                        result = extractParams(stateSearch).pcEnvironment;
+                    }
+                }
+
+                if (!result && window.location.search) {
+                    result = extractParams(window.location.search.substring(1)).pcEnvironment || null;
+                }
+
+                return result;
+            }
+
+            /**
+             * Sets the base mode of the app to error and show the provided message
+             */
+            function setErrorState(errorMsg) {
+                failureEl.textContent = errorMsg || '';
+                if (errorMsg) {
+                    $('.failure').text(errorMsg).show();
+                }
+                else {
+                    $('.failure').hide();
+                }
+            }
+
+            function isPermission(item, targetItem) {
+                let isItem = item === '*' || targetItem === '*';
+                if (!isItem) {
+                    isItem = item === targetItem;
+                }
+                return isItem;
+            }
+
+            /**
+             * Parse the permissions array and check whether or not the match the specified required ones.
+             *
+             * @returns A boolean indicating if the user possesses the required permissions.
+             */
+            function checkPermission(permissions, permissionValue) {
+                let isAllowed = false;
+
+                if (!permissions) {
+                    permissions = [];
+                }
+
+                if (permissionValue.match(/^[a-zA-Z0-9]+:\*$/)) {
+                    permissionValue = permissionValue.replace('*', '*:*');
+                }
+
+                const permissionsToValidate = permissionValue.split(':'),
+                    targetDomain = permissionsToValidate[0],
+                    targetEntity = permissionsToValidate[1],
+                    targetAction = permissionsToValidate[2];
+
+                permissions.forEach(function (permission) {
+                    const permissions = permission.split(':'),
+                        domain = permissions[0],
+                        entity = permissions[1],
+                        actionSet = permissions[2];
+
+                    if (targetDomain === domain) {
+                        const matchesEntity = isPermission(targetEntity, entity),
+                            matchesAction = isPermission(targetAction, actionSet);
+
+                        if (matchesEntity && matchesAction) {
+                            isAllowed = true;
+                        }
+                    }
+                });
+
+                return isAllowed;
+            }
+
+            // Authenticate with Genesys Cloud
+            function authenticate(client, pcEnvironment) {
+                // Allow targeting a different environment when host app is running locally
+                const platformEnvironment = pcEnvironment === 'localhost' ? 'mypurecloud.com' : pcEnvironment;
+                /*
+                * Note: To use this app in your own org, you will need to create your own OAuth2 Client(s)
+                * in your Genesys Cloud org.  After creating the Implicit grant client, map the client id(s) to
+                * the specified region key(s) in the object below, deploy the page, and configure an app to point to that URL.
+                */
+                const pcOAuthClientIds = { 'mypurecloud.ie': '94c407dd-5201-42df-918e-e2be065323ba' };
+
+                const clientId = pcOAuthClientIds[platformEnvironment];
+                if (!clientId) {
+                    const defaultErr = platformEnvironment + ': Unknown/Unsupported Genesys Cloud Environment';
+                    const localErr = `
+							The host app is running locally and the target platform client environment was mapped to '${platformEnvironment}'.
+							Ensure that you have an oauth client specified for this environment.
+						`;
+                    return Promise.reject(new Error(pcEnvironment === 'localhost' ? localErr : defaultErr));
+                }
+
+                client.setEnvironment(platformEnvironment);
+                client.setPersistSettings(true);
+
+                const { origin, protocol, host, pathname } = window.location;
+                const redirectUrl = (origin || `${protocol}//${host}`) + pathname;
+                let stateJSON = {
+                    "pcEnvironment": pcEnvironment
+                };
+                stateValue = JSON.stringify(stateJSON);
+
+                return client.loginImplicitGrant(clientId, redirectUrl, { state: `pcEnvironment=${pcEnvironment}` })
+                    .then(data => {
+                        window.history.replaceState(null, '', `${pathname}?${data.state}`);
+                    });
+            }
+
+
+        });
+    </script>
+</body>
+
+</html>
