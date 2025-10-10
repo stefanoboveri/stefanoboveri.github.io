@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Genesys Worktypes Widget</title>
+  <style>
+    #worktypes-widget { font-family: Arial, sans-serif; max-width: 400px; margin: 40px auto; border: 1px solid #eee; padding: 20px; border-radius: 8px; }
+    #worktypes-widget h3 { margin-top: 0; }
+    #worktypes-list { list-style-type: none; padding: 0; }
+    #worktypes-list li { margin-bottom: 8px; }
+    #error { color: red; }
+  </style>
+</head>
+<body>
+  <div id="worktypes-widget">
+    <h1>Create Genesys Cloud Workitem</h1>
+    <div>
+      <label>Select Worktype:</label>
+      <select id="worktypes-list" onchange="loadSchema()"></select>
+    </div>
+    <hr>
+    <div id="attributesForm"></div>
+    <div id="error"></div>
+  </div>
+  <script>
+    const CLIENT_ID = '5097e35a-b564-498a-a319-b4c4327073be'; // <-- Replace with your Genesys Cloud OAuth client ID
+    const CLIENT_SECRET = 'bjJ83QOLLtJj615PDu1tNGJsFLCpSdvX0LT3Bj8DMBk'; // <-- Replace with your Genesys Cloud OAuth client ID
+    const REDIRECT_URI = 'https://stefanoboveri.github.io/index.html';   // <-- Replace with your registered redirect URI
+    const REGION = 'mypurecloud.de';           // <-- Change if your Genesys region is different
+
+    // === OAuth Implicit Flow ===
+    function getAccessTokenFromUrl() {
+      const hash = window.location.hash;
+      if (!hash) return null;
+      const params = new URLSearchParams(hash.substring(1));
+      return params.get('access_token');
+    }
+
+    function redirectToGenesysOAuth() {
+      const authUrl = `https://login.${REGION}/oauth/authorize?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+      window.location.href = authUrl;
+    }
+
+    async function fetchWorktypes(token) {
+      const url = `https://api.${REGION}/api/v2/taskmanagement/worktypes/query`;
+      const response = await fetch(url, {
+        headers: { 
+          'Accept': 'application/json',
+		  'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+		},
+		method: "POST",
+		body: JSON.stringify({ "pageSize": 30, "attributes": ["id", "name", "schemaId"], "filters": [{ "name": "name", "type": "string", "operator": "BEGINS_WITH", "values": ["HM"]}] })    
+	  });
+      if (!response.ok) throw new Error('API error: ' + response.statusText, );
+      return response.json();
+    }
+
+    async function fetchSchema(token) {
+      const schemaId = document.getElementById('worktype-List').schid;
+      const url = `https://api.${REGION}/api/v2/taskmanagement/schema/` + schemaId;
+      const response = await fetch(url, {
+        headers: { 
+          'Accept': 'application/json',
+		  'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+		},
+		method: "GET"
+	  });
+      if (!response.ok) throw new Error('API error: ' + response.statusText, );
+      const schema = await resp.json();
+      return response.json();
+    }
+
+    async function main() {
+      let token = getAccessTokenFromUrl();
+      if (!token) {
+        redirectToGenesysOAuth();
+        return;
+      }
+
+      try {
+        const data = await fetchWorktypes(token);
+        const list = document.getElementById('worktypes-list');
+        list.innerHTML = '';
+        if (data.entities && data.entities.length > 0) {
+          data.entities.forEach(wt => {
+            const li = document.createElement('li');
+//            li.textContent = `${wt.name} (${wt.id})`;
+            li.wtid = wt.id;
+            li.wtname = wt.name;
+            li.schid = wt.schema.id;
+            list.appendChild(li);
+          });
+        } else {
+          list.innerHTML = '<li>No worktypes found.</li>';
+        }
+      } catch (err) {
+        document.getElementById('error').wtname = err.message;
+      }
+    }
+	
+    main();
+  </script>
+</body>
+</html>
