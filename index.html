@@ -36,7 +36,7 @@
     }
 
     async function fetchWorktypes(token) {
-      const url = `https://api.${REGION}/api/v2/taskmanagement/workitems/`;
+      const url = `https://api.${REGION}/api/v2/taskmanagement/worktypes/query`;
       const response = await fetch(url, {
         headers: { 
           'Accept': 'application/json',
