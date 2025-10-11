@@ -104,28 +104,6 @@
       return data.entities || [];
     }
 
-    // Step 3: Populate the Work Type dropdown
-    async function populateWorkTypeDropdown() {
-      const workTypes = await fetchWorkTypes();
-      const workTypeSelect = document.getElementById("workTypeSelect");
-
-      workTypes.forEach((workType) => {
-        const option = document.createElement("option");
-        option.value = workType.id;
-        option.textContent = workType.name;
-        workTypeSelect.appendChild(option);
-      });
-
-      // Handle Work Type selection
-      async workTypeSelect.addEventListener("change", (e) => {
-        const selectedWorkType = workTypes.find((type) => type.id === e.target.value);
-		const schemaId = selectedWorkType.schema.id;
-        const schemaWorktype = await fetchSchema(schemaId);
-//		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
-		renderSchemaAttributes(schemaWorktype.properties || {});
-      });
-    }
-
     // Step 4: Fetch Schema
     async function fetchSchema(schemaId) {
       const url = `https://api.${REGION}/api/v2/taskmanagement/workitems/schemas/` + schemaId;
@@ -139,7 +117,29 @@
 	  });
       if (!response.ok) throw new Error('API error: ' + response.statusText, );
       const data = await response.json();
-      return data.jsonSchema || [];
+      return data || [];
+    }
+
+    // Step 4: Populate the Work Type dropdown
+    async function populateWorkTypeDropdown() {
+      const workTypes = await fetchWorkTypes();
+      const workTypeSelect = document.getElementById("workTypeSelect");
+
+      workTypes.forEach((workType) => {
+        const option = document.createElement("option");
+        option.value = workType.id;
+        option.textContent = workType.name;
+        workTypeSelect.appendChild(option);
+      });
+
+      // Handle Work Type selection
+      workTypeSelect.addEventListener("change", async(e) => {
+        const selectedWorkType = workTypes.find((type) => type.id === e.target.value);
+		const schemaId = selectedWorkType.schema.id;
+        const schemaWorktype = await fetchSchema(schemaId);
+//		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
+		renderSchemaAttributes(schemaWorktype.jsonSchema.properties || {});
+      });
     }
 
     // Step 5: Render Schema Attributes dynamically
