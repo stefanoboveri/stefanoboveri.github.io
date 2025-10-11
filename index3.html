@@ -121,7 +121,8 @@
         const selectedWorkType = workTypes.find((type) => type.id === e.target.value);
 		const schemaId = selectedWorkType.schema.id;
         const schemaWorktype = fetchSchema(schemaId);
-		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
+//		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
+		renderSchemaAttributes(schemaWorktype.properties || {});
       });
     }
 
@@ -138,7 +139,7 @@
 	  });
       if (!response.ok) throw new Error('API error: ' + response.statusText, );
       const data = await response.json();
-      return data.entities || [];
+      return data.jsonSchema || [];
     }
 
     // Step 5: Render Schema Attributes dynamically
@@ -151,14 +152,14 @@
         const attributeDiv = document.createElement("div");
 
         const label = document.createElement("label");
-        label.textContent = attribute.name;
+        label.textContent = attribute.title;
         label.setAttribute("for", key);
 
         const input = document.createElement("input");
         input.type = "text";
         input.id = key;
         input.name = key;
-        input.required = attribute.required;
+//        input.required = attribute.required;
 
         attributeDiv.appendChild(label);
         attributeDiv.appendChild(input);
