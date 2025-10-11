@@ -127,7 +127,7 @@
 
     // Step 4: Fetch Schema
     async function fetchSchema(schemaId) {
-      const url = `https://api.${REGION}/api/v2/taskmanagement/schema/` + schemaId;
+      const url = `https://api.${REGION}/api/v2/taskmanagement/workitems/schemas/` + schemaId;
       const response = await fetch(url, {
         headers: { 
           'Accept': 'application/json',
