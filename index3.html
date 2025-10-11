@@ -117,10 +117,10 @@
       });
 
       // Handle Work Type selection
-      workTypeSelect.addEventListener("change", (e) => {
+      async workTypeSelect.addEventListener("change", (e) => {
         const selectedWorkType = workTypes.find((type) => type.id === e.target.value);
 		const schemaId = selectedWorkType.schema.id;
-        const schemaWorktype = fetchSchema(schemaId);
+        const schemaWorktype = await fetchSchema(schemaId);
 //		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
 		renderSchemaAttributes(schemaWorktype.properties || {});
       });
