@@ -119,11 +119,29 @@
       // Handle Work Type selection
       workTypeSelect.addEventListener("change", (e) => {
         const selectedWorkType = workTypes.find((type) => type.id === e.target.value);
-        renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
+		const schemaId = selectedWorkType.schema.id;
+        const schemaWorktype = fetchSchema(schemaId);
+		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
       });
     }
 
-    // Step 4: Render Schema Attributes dynamically
+    // Step 4: Fetch Schema
+    async function fetchSchema(schemaId) {
+      const url = `https://api.${REGION}/api/v2/taskmanagement/schema/` + schemaId;
+      const response = await fetch(url, {
+        headers: { 
+          'Accept': 'application/json',
+		  'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+		},
+		method: "GET"
+	  });
+      if (!response.ok) throw new Error('API error: ' + response.statusText, );
+      const data = await response.json();
+      return data.entities || [];
+    }
+
+    // Step 5: Render Schema Attributes dynamically
     function renderSchemaAttributes(attributes) {
       const attributesContainer = document.getElementById("attributesContainer");
       attributesContainer.innerHTML = ""; // Clear existing attributes
