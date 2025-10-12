@@ -186,7 +186,8 @@
     async function createWorkItem(workTypeId, attributes) {
 	  const jsonCustomFields = {};
 	  Object.keys(attributes).forEach((key) => {
-		if(!obj[key] === '') {
+	    const keyValue = obj[key];
+		if(obj[key] !== '' || key != 'name') {
 			jsonCustomFields[key] = obj[key];
 		}
       });
