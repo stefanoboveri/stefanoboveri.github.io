@@ -153,7 +153,7 @@
 	  const input = document.createElement("input");
 	  input.type = "text";
 	  input.id = "Name";
-	  input.name = "Name";
+	  input.name = "name";
 	  input.required = true;
 	  attributeDiv.appendChild(label);
 	  attributeDiv.appendChild(input);
@@ -191,8 +191,8 @@
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          workTypeId,
-          attributes,
+          typeId: workTypeId,
+          name: attributes.name,
         }),
       });
       const data = await response.json();
