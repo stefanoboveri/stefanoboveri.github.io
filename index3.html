@@ -184,6 +184,12 @@
 
     // Step 5: Create a Work Item
     async function createWorkItem(workTypeId, attributes) {
+	  const jsonCustomFields = {};
+	  Object.keys(attributes).forEach((key) => {
+		if(!obj[key] === '') {
+			jsonCustomFields[key] = obj[key];
+		}
+      });
       const response = await fetch(`${API_BASE_URL}/api/v2/taskmanagement/workitems`, {
         method: "POST",
         headers: {
@@ -193,6 +199,7 @@
         body: JSON.stringify({
           typeId: workTypeId,
           name: attributes.name,
+		  customFields: jsonCustomFields
         }),
       });
       const data = await response.json();
