@@ -187,7 +187,7 @@
 	  const jsonCustomFields = {};
 	  Object.keys(attributes).forEach(key => {
 		if(attributes[key] !== '' && key != 'name') {
-			jsonCustomFields[key] = value;
+			jsonCustomFields[key] = attributes[key];
 		}
       });
       const response = await fetch(`${API_BASE_URL}/api/v2/taskmanagement/workitems`, {
