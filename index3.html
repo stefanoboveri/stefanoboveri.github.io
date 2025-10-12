@@ -185,8 +185,8 @@
     // Step 5: Create a Work Item
     async function createWorkItem(workTypeId, attributes) {
 	  const jsonCustomFields = {};
-	  Object.keys(attributes).forEach((key, value) => {
-		if(value !== '' || key != 'name') {
+	  Object.keys(attributes).forEach(key => {
+		if(attributes[key] !== '' && key != 'name') {
 			jsonCustomFields[key] = value;
 		}
       });
