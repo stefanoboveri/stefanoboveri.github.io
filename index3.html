@@ -149,21 +149,24 @@
 
       Object.keys(attributes).forEach((key) => {
         const attribute = attributes[key];
-        const attributeDiv = document.createElement("div");
+		if !(key.startsWith("z_routingp")) {
+			const attributeArray = key.split("_");
+			const attributeType = attributeArray[1];
+			const attributeDiv = document.createElement("div");
 
-        const label = document.createElement("label");
-        label.textContent = attribute.title;
-        label.setAttribute("for", key);
+			const label = document.createElement("label");
+			label.textContent = attribute.title;
+			label.setAttribute("for", key);
 
-        const input = document.createElement("input");
-        input.type = "text";
-        input.id = key;
-        input.name = key;
-//        input.required = attribute.required;
-
-        attributeDiv.appendChild(label);
-        attributeDiv.appendChild(input);
-        attributesContainer.appendChild(attributeDiv);
+			const input = document.createElement("input");
+				input.type = "text";
+				input.id = key;
+				input.name = key;
+	//        input.required = attribute.required;
+	//		attributeDiv.appendChild(label);
+			attributeDiv.appendChild(input);
+			attributesContainer.appendChild(attributeDiv);
+		}
       });
     }
 
