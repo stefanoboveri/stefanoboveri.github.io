@@ -164,13 +164,13 @@
 		if (!key.startsWith("z_routingp")) {
 			const attributeArray = key.split("_");
 			const attributeType = attributeArray[1];
-			attributeDiv = document.createElement("div");
+			const attributeDiv = document.createElement("div");
 
-			label = document.createElement("label");
+			const label = document.createElement("label");
 			label.textContent = attribute.title;
 			label.setAttribute("for", key);
 
-			input = document.createElement("input");
+			const input = document.createElement("input");
 			input.type = "text";
 			input.id = key;
 			input.name = key;
