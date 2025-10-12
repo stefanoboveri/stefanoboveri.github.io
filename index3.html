@@ -149,7 +149,7 @@
 
       Object.keys(attributes).forEach((key) => {
         const attribute = attributes[key];
-		if !(key.startsWith("z_routingp")) {
+		if (!key.startsWith("z_routingp")) {
 			const attributeArray = key.split("_");
 			const attributeType = attributeArray[1];
 			const attributeDiv = document.createElement("div");
