@@ -7,20 +7,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 20em;
     }
     form div {
-      margin-bottom: 15px;
+      margin-bottom: 2em;
     }
-    label {
-      display: block;
-      font-weight: bold;
-    }
-    input, select, button {
-      padding: 8px;
-      width: 100%;
-      max-width: 400px;
-    }
+    .row label { min-width: 120px; font-weight: bold; margin-right: 1em; }
+    .row input, select, button { flex: 1; padding: 0.3em; }
+	
     button {
       background-color: #007bff;
       color: white;
@@ -149,12 +143,15 @@
 	  const attributeDiv = document.createElement("div");
 	  const label = document.createElement("label");
 	  label.textContent = "Name";
-	  label.setAttribute("for", "Name");
+//	  label.setAttribute("for", "name");
+
 	  const input = document.createElement("input");
 	  input.type = "text";
-	  input.id = "Name";
-	  input.name = "name";
+	  input.value = "";
+//	  input.id = "Name";
+//	  input.name = "name";
 	  input.required = true;
+	  
 	  attributeDiv.appendChild(label);
 	  attributeDiv.appendChild(input);
 	  attributesContainer.appendChild(attributeDiv);
