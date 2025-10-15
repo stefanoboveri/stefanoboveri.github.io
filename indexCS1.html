@@ -54,20 +54,23 @@
 </head>
 <body>
   <h1>Genesys Cloud Work Item Creator</h1>
-  
-  <!-- Dropdown to select Work Type -->
-  <div>
-    <label for="workTypeSelect">Select Work Type:</label>
-    <select id="workTypeSelect">
-      <option value="">-- Select a Work Type --</option>
-    </select>
-  </div>
+  <div class="container">
+    <h1>Genesys Cloud Work Item Creator</h1>
 
-  <!-- Dynamic form for schema attributes -->
-  <form id="workItemForm">
-    <div id="attributesContainer"></div>
-    <button type="submit">Create Work Item</button>
-  </form>
+    <div class="form-grid" style="margin-bottom:16px">
+      <label for="workTypeSelect">Select Work Type:</label>
+      <select id="workTypeSelect">
+        <option value="">-- Select a Work Type --</option>
+      </select>
+    </div>
+
+    <form id="workItemForm" class="form-grid">
+      <div id="attributesContainer" class="form-grid full-row"></div>
+      <div class="full-row">
+        <button type="submit">Create Work Item</button>
+      </div>
+    </form>
+  </div>
 
   <script>
 /*    const CLIENT_ID = '5097e35a-b564-498a-a319-b4c4327073be'; // HM OST
@@ -169,6 +172,81 @@
     // Step 5: Render Schema Attributes dynamically
     function renderSchemaAttributes(attributes) {
       const attributesContainer = document.getElementById("attributesContainer");
+      attributesContainer.innerHTML = "";
+
+      // Work item name
+      const nameRow = document.createElement("div");
+      nameRow.className = "form-grid full-row";
+      const nameLabel = document.createElement("label");
+      nameLabel.textContent = "Workitem Name";
+      nameLabel.setAttribute("for", "name");
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.id = "name";
+      nameInput.name = "name";
+      nameInput.required = true;
+      nameRow.appendChild(nameLabel);
+      nameRow.appendChild(nameInput);
+      attributesContainer.appendChild(nameRow);
+
+      Object.keys(attributes).forEach((key) => {
+        if (key.startsWith("z_routing")) return;
+
+        const attribute = attributes[key];
+        const row = document.createElement("div");
+        row.className = "form-grid full-row";
+
+        let label = document.createElement("label");
+        label.textContent = attribute.title;
+        label.setAttribute("for", key);
+
+        let input;
+        if (key === "request_type_enum" || key === "urgency_enum") {
+          input = document.createElement("select");
+          input.name = key;
+          input.id = key;
+          input.required = true;
+          input.innerHTML = '<option value="">Select...</option>';
+          (attribute.enum || []).forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v; opt.textContent = v; input.appendChild(opt);
+          });
+        } else if (key === "completed_checkbox") {
+          const wrapper = document.createElement("label");
+          wrapper.className = "full-row";
+          wrapper.style.display = "flex";
+          wrapper.style.alignItems = "center";
+          wrapper.style.gap = "8px";
+
+          input = document.createElement("input");
+          input.type = "checkbox";
+          input.name = key;
+          input.id = key;
+
+          wrapper.appendChild(input);
+          wrapper.appendChild(document.createTextNode(attribute.title));
+          attributesContainer.appendChild(wrapper);
+          return;
+        } else if (key === "appointment_datetime") {
+          input = document.createElement("input");
+          input.type = "datetime-local";
+          input.name = key;
+          input.id = key;
+        } else {
+          input = document.createElement("input");
+          input.type = "text";
+          input.name = key;
+          input.id = key;
+        }
+
+        row.appendChild(label);
+        row.appendChild(input);
+        attributesContainer.appendChild(row);
+      });
+    }
+/*	
+    function renderSchemaAttributes(attributes) {
+      const attributesContainer = document.getElementById("attributesContainer");
       attributesContainer.innerHTML = ""; // Clear existing attributes
 	  const attributeDiv = document.createElement("div");
 	  const label = document.createElement("label");
@@ -245,7 +323,7 @@
 		}
       });
     }
-
+*/
     // Step 5: Create a Work Item
     async function createWorkItem(workTypeId, attributes) {
 	  const jsonCustomFields = {};
