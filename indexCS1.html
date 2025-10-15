@@ -328,8 +328,8 @@
 	  const jsonCustomFields = {};
 	  Object.keys(attributes).forEach(key => {
 		if(attributes[key] !== '' && key != 'name') {
-			if(key.endsWith("_checkbox") && attributes[key] == "on") {
-			  jsonCustomFields[key] = true;
+			if(key.endsWith("_checkbox")) {
+			  jsonCustomFields[key] = (attributes[key] == "on") ? true : false;
 			} else {
 			  jsonCustomFields[key] = attributes[key];
 			}
