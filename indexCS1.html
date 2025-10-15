@@ -332,6 +332,7 @@
 			  jsonCustomFields[key] = true;
 			} else {
 			  jsonCustomFields[key] = attributes[key];
+			}
 		}
       });
       const response = await fetch(`${API_BASE_URL}/api/v2/taskmanagement/workitems`, {
