@@ -15,7 +15,7 @@
     }
     .row { display: flex; align-items: center; margin-bottom: 1em; margin-top: 1em;}
     .row label { width: 200px; font-weight: bold; margin-right: 1em; align-self: left;}
-    .row input { flex: 1; margin-left: 100px; padding: 0.3em; align-self: right;}
+    .row input, select { flex: 1; margin-left: 100px; padding: 0.3em; align-self: right;}
 
     button {
       background-color: #007bff;
@@ -179,18 +179,25 @@
 			  input.name = key;
 			  input.id = key;
 			  input.required = true;
-/*			  input.innerHTML = '<option value="">Select...</option>';
-			  (attribute.values || []).forEach(val => {
+			  input.innerHTML = '<option value="">Select...</option>';
+			  (attribute.enum || []).forEach(val => {
 				const opt = document.createElement('option');
 				opt.value = val;
 				opt.textContent = val;
 				input.appendChild(opt);
-			  });*/
+			  });
 			} else if (key == "urgency_enum") {
 			  input = document.createElement('select');
 			  input.name = key;
 			  input.id = key;
 			  input.required = true;
+			  input.innerHTML = '<option value="">Select...</option>';
+			  (attribute.enum || []).forEach(val => {
+				const opt = document.createElement('option');
+				opt.value = val;
+				opt.textContent = val;
+				input.appendChild(opt);
+			  });
 			} else {
 				input = document.createElement("input");
 				input.type = "text";
