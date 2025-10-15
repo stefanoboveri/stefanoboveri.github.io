@@ -328,7 +328,10 @@
 	  const jsonCustomFields = {};
 	  Object.keys(attributes).forEach(key => {
 		if(attributes[key] !== '' && key != 'name') {
-			jsonCustomFields[key] = attributes[key];
+			if(key.endsWith("_checkbox") && attributes[key] == "on") {
+			  jsonCustomFields[key] = true;
+			} else {
+			  jsonCustomFields[key] = attributes[key];
 		}
       });
       const response = await fetch(`${API_BASE_URL}/api/v2/taskmanagement/workitems`, {
