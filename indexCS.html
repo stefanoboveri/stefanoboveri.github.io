@@ -98,7 +98,7 @@
           "Content-Type": 'application/json'
         },
 		method: "POST",
-		body: JSON.stringify({ "pageSize": 30, "attributes": ["id", "name", "schemaId"], "filters": [{ "name": "name", "type": "string", "operator": "BEGINS_WITH", "values": ["HM"]}] })    
+		body: JSON.stringify({ "pageSize": 30, "attributes": ["id", "name", "schemaId"], "filters": [{ "name": "name", "type": "string", "operator": "BEGINS_WITH", "values": ["CS"]}] })    
       });
       const data = await response.json();
       return data.entities || [];
