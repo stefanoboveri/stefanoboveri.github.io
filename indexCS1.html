@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic API-driven Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    label { display: block; margin-top: 1em; margin-bottom: 0.5em; }
+    input, select { padding: 0.4em; font-size: 1em; width: 250px; }
+    .error { color: red; margin-top: 0.5em; }
+    .loading { color: #888; font-style: italic; margin-bottom: 1em; }
+    .field-group { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <h2>Dynamic Request Form</h2>
+  <div id="loading" class="loading">Loading fields from API...</div>
+  <form id="dynamicForm" style="display:none;"></form>
+  <button id="submitBtn" style="display:none; margin-top: 1em;">Submit</button>
+  <div class="error" id="errorMsg"></div>
+  <pre id="output"></pre>
+  <script>
+    // Change this to your actual API endpoint!
+    const apiUrl = "https://api.example.com/fields-metadata";
+
+    // Example of expected API response:
+    // [
+    //   { name: "_enum_request_type", label: "Request Type", values: ["CREATE", "UPDATE"] },
+    //   { name: "_checkbox_is_active", label: "Is Active" },
+    //   { name: "_datetime_scheduled_at", label: "Schedule at" },
+    //   { name: "_text_user", label: "User" }
+    // ]
+
+    function setLoading(isLoading) {
+      document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
+      document.getElementById('dynamicForm').style.display = isLoading ? 'none' : 'block';
+      document.getElementById('submitBtn').style.display = isLoading ? 'none' : 'block';
+    }
+
+    function renderForm(fields) {
+      const form = document.getElementById('dynamicForm');
+      form.innerHTML = '';
+      fields.forEach(field => {
+        const group = document.createElement('div');
+        group.className = 'field-group';
+        const label = document.createElement('label');
+        label.htmlFor = field.name;
+        label.textContent = field.label || field.name;
+        group.appendChild(label);
+
+        let input;
+        if (field.name.startsWith('_enum')) {
+          input = document.createElement('select');
+          input.name = field.name;
+          input.id = field.name;
+          input.required = true;
+          input.innerHTML = '<option value="">Select...</option>';
+          (field.values || []).forEach(val => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            input.appendChild(opt);
+          });
+        } else if (field.name.startsWith('_checkbox')) {
+          input = document.createElement('input');
+          input.type = 'checkbox';
+          input.name = field.name;
+          input.id = field.name;
+        } else if (field.name.startsWith('_datetime')) {
+          input = document.createElement('input');
+          input.type = 'datetime-local';
+          input.name = field.name;
+          input.id = field.name;
+          input.required = true;
+        } else if (field.name.startsWith('_text')) {
+          input = document.createElement('input');
+          input.type = 'text';
+          input.name = field.name;
+          input.id = field.name;
+          input.required = true;
+        } else {
+          // Unknown type, fallback to text
+          input = document.createElement('input');
+          input.type = 'text';
+          input.name = field.name;
+          input.id = field.name;
+        }
+        group.appendChild(input);
+        form.appendChild(group);
+      });
+    }
+
+    function getFormValues(fields) {
+      const result = {};
+      fields.forEach(field => {
+        const name = field.name;
+        const input = document.getElementById(name);
+        if (!input) return;
+        if (name.startsWith('_checkbox')) {
+          result[name] = input.checked;
+        } else if (name.startsWith('_datetime')) {
+          const val = input.value;
+          if (!val) {
+            throw new Error(`Field "${field.label || name}" is required.`);
+          }
+          const dt = new Date(val);
+          if (isNaN(dt.getTime())) {
+            throw new Error(`Invalid datetime format for "${field.label || name}".`);
+          }
+          result[name] = dt.toISOString().replace(/\.\d+Z$/, 'Z');
+        } else {
+          if (!input.value) {
+            throw new Error(`Field "${field.label || name}" is required.`);
+          }
+          result[name] = input.value;
+        }
+      });
+      return result;
+    }
+
+    // Fetch API data and render form
+    fetch(apiUrl)
+      .then(res => {
+        if (!res.ok) throw new Error("API call failed");
+        return res.json();
+      })
+      .then(fields => {
+        // fields is expected to be an array of field metadata
+        renderForm(fields);
+        setLoading(false);
+
+        // Add submit handler (single time)
+        document.getElementById('submitBtn').onclick = function(e) {
+          document.getElementById('errorMsg').textContent = '';
+          try {
+            const values = getFormValues(fields);
+            document.getElementById('output').textContent = JSON.stringify(values, null, 2);
+          } catch (err) {
+            document.getElementById('errorMsg').textContent = err.message;
+          }
+        };
+      })
+      .catch(err => {
+        document.getElementById('loading').textContent = "Failed to load fields from API.";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
