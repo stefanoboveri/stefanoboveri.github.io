@@ -10,7 +10,9 @@
       margin: 20px;
     }
     form div {
-      margin-top: 15px;
+      width: 100%; /* The element will try to be 100% of its parent's width */
+	  max-width: 900px; /* But it will never exceed 900px in width */
+	  margin-top: 15px;
       margin-bottom: 15px;
     }
     .row { display: flex; align-items: center; margin-bottom: 1em; margin-top: 1em;}
