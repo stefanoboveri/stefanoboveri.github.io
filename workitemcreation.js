@@ -1,0 +1,313 @@
+    const CLIENT_ID = process.env.PSEMEACONSULTING01_CLIENT_ID;
+    const CLIENT_SECRET = process.env.PSEMEACONSULTING01_CLIENT_SECRET;
+
+    const REGION = process.env.PSEMEACONSULTING01_CLIENT_ID;
+    const API_BASE_URL = process.env.PSEMEACONSULTING01_CLIENT_ID;
+
+    const REDIRECT_URI = process.env.PSEMEACONSULTING01_CLIENT_ID;
+
+    let accessToken = "";
+
+    // Step 1: Authenticate and retrieve access token
+    async function authenticate() {
+      const response = await fetch("https://login.euw2.pure.cloud/oauth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+        }),
+      });
+      const data = await response.json();
+      accessToken = data.access_token;
+    }
+
+    function getAccessTokenFromUrl() {
+      const hash = window.location.hash;
+      if (!hash) return null;
+      const params = new URLSearchParams(hash.substring(1));
+      return params.get('access_token');
+    }
+
+    function redirectToGenesysOAuth() {
+      const authUrl = `https://login.${REGION}/oauth/authorize?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+      window.location.href = authUrl;
+    }
+
+    // Step 2: Fetch the list of work types
+    async function fetchWorkTypes() {
+      const response = await fetch(`${API_BASE_URL}/api/v2/taskmanagement/worktypes/query`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Accept": 'application/json',
+          "Content-Type": 'application/json'
+        },
+		method: "POST",
+		body: JSON.stringify({ "pageSize": 30, "attributes": ["id", "name", "schemaId"], "filters": [{ "name": "name", "type": "string", "operator": "BEGINS_WITH", "values": ["CS"]}] })    
+      });
+      const data = await response.json();
+      return data.entities || [];
+    }
+
+    // Step 4: Fetch Schema
+    async function fetchSchema(schemaId) {
+      const url = `https://api.${REGION}/api/v2/taskmanagement/workitems/schemas/` + schemaId;
+      const response = await fetch(url, {
+        headers: { 
+          'Accept': 'application/json',
+		  'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+		},
+		method: "GET"
+	  });
+      if (!response.ok) throw new Error('API error: ' + response.statusText, );
+      const data = await response.json();
+      return data || [];
+    }
+
+    // Step 4: Populate the Work Type dropdown
+    async function populateWorkTypeDropdown() {
+      const workTypes = await fetchWorkTypes();
+      const workTypeSelect = document.getElementById("workTypeSelect");
+
+      workTypes.forEach((workType) => {
+        const option = document.createElement("option");
+        option.value = workType.id;
+        option.textContent = workType.name;
+        workTypeSelect.appendChild(option);
+      });
+
+      // Handle Work Type selection
+      workTypeSelect.addEventListener("change", async(e) => {
+        const selectedWorkType = workTypes.find((type) => type.id === e.target.value);
+		const schemaId = selectedWorkType.schema.id;
+        const schemaWorktype = await fetchSchema(schemaId);
+//		renderSchemaAttributes(selectedWorkType?.schema?.attributes || {});
+		renderSchemaAttributes(schemaWorktype.jsonSchema.properties || {});
+      });
+    }
+
+    // Step 5: Render Schema Attributes dynamically
+    function renderSchemaAttributes(attributes) {
+      const attributesContainer = document.getElementById("attributesContainer");
+      attributesContainer.innerHTML = "";
+
+      // Work item name
+      const nameRow = document.createElement("div");
+      nameRow.className = "form-grid full-row";
+      const nameLabel = document.createElement("label");
+      nameLabel.textContent = "Workitem Name";
+      nameLabel.setAttribute("for", "name");
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.id = "name";
+      nameInput.name = "name";
+      nameInput.required = true;
+      nameRow.appendChild(nameLabel);
+      nameRow.appendChild(nameInput);
+      attributesContainer.appendChild(nameRow);
+
+      Object.keys(attributes).forEach((key) => {
+        if (key.startsWith("z_routing")) return;
+
+        const attribute = attributes[key];
+        const row = document.createElement("div");
+        row.className = "form-grid full-row";
+
+        let label = document.createElement("label");
+        label.textContent = attribute.title;
+        label.setAttribute("for", key);
+
+        let input;
+        if (key === "request_type_enum" || key === "urgency_enum") {
+          input = document.createElement("select");
+          input.name = key;
+          input.id = key;
+          input.required = true;
+          input.innerHTML = '<option value="">Select...</option>';
+          (attribute.enum || []).forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v; opt.textContent = v; input.appendChild(opt);
+          });
+        } else if (key === "completed_checkbox") {
+          const wrapper = document.createElement("label");
+          wrapper.className = "full-row";
+          wrapper.style.display = "flex";
+          wrapper.style.alignItems = "center";
+          wrapper.style.gap = "8px";
+
+          input = document.createElement("input");
+          input.type = "checkbox";
+          input.name = key;
+          input.id = key;
+
+          wrapper.appendChild(input);
+          wrapper.appendChild(document.createTextNode(attribute.title));
+          attributesContainer.appendChild(wrapper);
+          return;
+        } else if (key === "appointment_datetime") {
+          input = document.createElement("input");
+          input.type = "datetime-local";
+          input.name = key;
+          input.id = key;
+        } else {
+          input = document.createElement("input");
+          input.type = "text";
+          input.name = key;
+          input.id = key;
+        }
+
+        row.appendChild(label);
+        row.appendChild(input);
+        attributesContainer.appendChild(row);
+      });
+    }
+/*	
+    function renderSchemaAttributes(attributes) {
+      const attributesContainer = document.getElementById("attributesContainer");
+      attributesContainer.innerHTML = ""; // Clear existing attributes
+	  const attributeDiv = document.createElement("div");
+	  const label = document.createElement("label");
+	  label.textContent = "Workitem Name";
+//	  label.setAttribute("for", "name");
+
+	  const input = document.createElement("input");
+	  input.type = "text";
+	  input.value = "";
+//	  input.id = "Name";
+//	  input.name = "name";
+	  input.required = true;
+	  
+	  attributeDiv.appendChild(label);
+	  attributeDiv.appendChild(input);
+	  attributesContainer.appendChild(attributeDiv);
+      
+	  Object.keys(attributes).forEach((key) => {
+        const attribute = attributes[key];
+		if (!key.startsWith("z_routing")) {
+			const attributeArray = key.split("_");
+			const attributeType = attributeArray[1];
+			const attributeDiv = document.createElement("div");
+
+			const label = document.createElement("label");
+			label.textContent = attribute.title;
+			label.setAttribute("for", key);
+			let input;
+			
+			if (key == "request_type_enum") {
+			  input = document.createElement('select');
+			  input.name = key;
+			  input.id = key;
+			  input.required = true;
+			  input.innerHTML = '<option value="">Select...</option>';
+			  (attribute.enum || []).forEach(val => {
+				const opt = document.createElement('option');
+				opt.value = val;
+				opt.textContent = val;
+				input.appendChild(opt);
+			  });
+			} else if (key == "urgency_enum") {
+			  input = document.createElement('select');
+			  input.name = key;
+			  input.id = key;
+			  input.required = true;
+			  input.innerHTML = '<option value="">Select...</option>';
+			  (attribute.enum || []).forEach(val => {
+				const opt = document.createElement('option');
+				opt.value = val;
+				opt.textContent = val;
+				input.appendChild(opt);
+			  });
+			} else if (key == "completed_checkbox") {
+			  input = document.createElement('input');
+			  input.type = 'checkbox';
+			  input.name = key;
+			  input.id = key;
+			} else if (key == "appointment_datetime") {
+			  input = document.createElement('input');
+			  input.type = 'datetime-local';
+			  input.name = key;
+			  input.id = key;
+			} else {
+				input = document.createElement("input");
+				input.type = "text";
+				input.id = key;
+				input.name = key;
+			}
+		//  input.required = attribute.required;
+			attributeDiv.appendChild(label);
+			attributeDiv.appendChild(input);
+			attributesContainer.appendChild(attributeDiv);
+		}
+      });
+    }
+*/
+    // Step 5: Create a Work Item
+    async function createWorkItem(workTypeId, attributes) {
+	  const jsonCustomFields = {};
+	  Object.keys(attributes).forEach(key => {
+		if(attributes[key] !== '' && key != 'name') {
+			if(key.endsWith("_checkbox")) {
+			  jsonCustomFields[key] = (attributes[key] == "on") ? true : false;
+			} else {
+			  jsonCustomFields[key] = attributes[key];
+			}
+		}
+      });
+      const response = await fetch(`${API_BASE_URL}/api/v2/taskmanagement/workitems`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          typeId: workTypeId,
+          name: attributes.name,
+		  customFields: jsonCustomFields
+        }),
+      });
+      const data = await response.json();
+      return data;
+    }
+
+    // Step 6: Handle form submission
+    document.getElementById("workItemForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const workTypeId = document.getElementById("workTypeSelect").value;
+      if (!workTypeId) {
+        alert("Please select a Work Type.");
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      const attributes = {};
+      formData.forEach((value, key) => {
+        attributes[key] = value;
+      });
+
+      try {
+        const result = await createWorkItem(workTypeId, attributes);
+        alert("Work Item created successfully!");
+        console.log(result);
+      } catch (error) {
+        console.error("Error creating Work Item:", error);
+        alert("Failed to create Work Item. Check console for details.");
+      }
+    });
+
+    // Initialize the application
+    async function init() {
+//      await authenticate();
+      accessToken = getAccessTokenFromUrl();
+      if (!accessToken) {
+        redirectToGenesysOAuth();
+        return;
+      }
+      await populateWorkTypeDropdown();
+    }
+
+    init();
