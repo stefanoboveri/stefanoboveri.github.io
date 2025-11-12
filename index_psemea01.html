@@ -51,6 +51,7 @@
     }
     button:hover { background-color: #0056b3; }
   </style>
+<p>%PSEMEACONSULTING01_CLIENT_ID%</p>
 </head>
 <body>
   <div class="container">
@@ -72,7 +73,7 @@
   </div>
 
   <script>
-    const CLIENT_ID = env.PSEMEACONSULTING01_CLIENT_ID;
+    const CLIENT_ID = '%PSEMEACONSULTING01_CLIENT_ID%';
     const CLIENT_SECRET = env.PSEMEACONSULTING01_CLIENT_SECRET;
 
     const REGION = process.env.PSEMEACONSULTING01_CLIENT_ID;
