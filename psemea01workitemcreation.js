@@ -2,7 +2,7 @@ const CLIENT_ID = '324cc417-0efd-46ae-b41f-7ab6b9cea303';
 const CLIENT_SECRET = 'Eq1C28XaxygInpdI_7R0c2OjdHBflGN2eq5IPKSsDU0';
 const REGION = 'euw2.pure.cloud';
 const API_BASE_URL = "https://api.euw2.pure.cloud";
-const REDIRECT_URI = 'https://stefanoboveri.github.io/index_psemea01.html';
+const REDIRECT_URI = 'https://stefanoboveri.github.io/index_psemea01a.html';
 
 let accessToken = "";
 
