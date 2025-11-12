@@ -51,7 +51,6 @@
     }
     button:hover { background-color: #0056b3; }
   </style>
-<p>%PSEMEACONSULTING01_CLIENT_ID%</p>
 </head>
 <body>
   <div class="container">
@@ -73,13 +72,13 @@
   </div>
 
   <script>
-    const CLIENT_ID = '%PSEMEACONSULTING01_CLIENT_ID%';
-    const CLIENT_SECRET = env.PSEMEACONSULTING01_CLIENT_SECRET;
+    const CLIENT_ID = "$PSEMEACONSULTING01_CLIENT_ID";
+    const CLIENT_SECRET = "$PSEMEACONSULTING01_CLIENT_SECRET";
 
-    const REGION = process.env.PSEMEACONSULTING01_CLIENT_ID;
-    const API_BASE_URL = process.env.PSEMEACONSULTING01_CLIENT_ID;
+    const REGION = "$PSEMEACONSULTING01_CLIENT_ID";
+    const API_BASE_URL = "$PSEMEACONSULTING01_CLIENT_ID";
 
-    const REDIRECT_URI = process.env.PSEMEACONSULTING01_CLIENT_ID;
+    const REDIRECT_URI = "$PSEMEACONSULTING01_CLIENT_ID";
 
     let accessToken = "";
 
